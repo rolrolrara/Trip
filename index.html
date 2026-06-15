@@ -379,8 +379,8 @@ const DEFAULT_DATA = {
     { time: '14:00', type: 6, activity: 'BISE 비치 스노클링 — 숙소 바로 앞', detail: '• 숙소에서 도보 5분\n• 수심 얕고 잔잔해 아이와 함께하기 좋음\n• 열대어·작은 산호 관찰 가능\n• 마스크·스노클·오리발 지참\n• 구명조끼 착용 권장' },
     { time: '15:30', type: 6, activity: '비세자키 스노클링 — 산호초·바다거북 (간조 14:59 최적)', detail: '• 숙소에서 도보 15분 또는 차 5분\n• 비세 반도 끝 산호초 군락 — 바다거북 자주 출몰\n• 간조 직후라 수심 얕아 스노클링 최적\n• 조개·산호 밟지 않도록 주의\n• 아이 구명조끼 필수' },
     { time: '17:30', type: 1, activity: '숙소 복귀 & 샤워', detail: '' },
-    { time: '18:30', type: 3, activity: '비세자키 일몰 감상', detail: '• 일몰 19:23\n• 서쪽 바다 조망 포인트\n• 스노클링 끝나고 다시 비세자키로' },
-    { time: '19:30', type: 2, activity: '파라 모토부 치킨 테이크아웃 → 숙소에서 저녁', mapUrl: 'パーラーもとぶ田園 本部町', detail: '• 모토부 명물 치킨 — 현지인 맛집\n• 테이크아웃 주문 후 숙소로\n• 스노클링 후 맥주 한 캔이랑 먹으면 최고' },
+    { time: '18:30', type: 0, activity: '파라 모토부 치킨 테이크아웃 출발', mapUrl: 'パーラーもとぶ田園 本部町', detail: '• 숙소에서 차로 약 10~15분\n• 테이크아웃 주문 후 바로 복귀' },
+    { time: '19:00', type: 2, activity: '숙소에서 저녁 — 치킨 먹으며 바다 경치 감상 (일몰 19:23)', detail: '• 파라 모토부 치킨\n• 숙소 창가/테라스에서 일몰 바라보며\n• 맥주 한 캔이랑 최고의 조합' },
   ]},
   3: { label: '나키진 → 고우리 → 세소코 스노클링 → 차탄', items: [
     { time: '08:00', type: 2, activity: 'Niruyakanaya BISE 조식 & 체크아웃', detail: '• 체크아웃 전 짐 정리\n• 귀중품·충전기 확인' },
@@ -466,13 +466,21 @@ if (data[1]) {
     }
   });
 }
-// 2일차 저녁 마이그레이션: 파라 모토부 치킨
+// 2일차 저녁 마이그레이션: 파라 모토부 치킨 + 일정 재편
 if (data[2]) {
   data[2].items.forEach(item => {
-    if (item.activity.includes('저녁 - 비세/모토부')) {
-      item.activity = '파라 모토부 치킨 테이크아웃 → 숙소에서 저녁';
+    if (item.activity.includes('저녁 - 비세/모토부') || item.activity.includes('파라 모토부 치킨 테이크아웃 →')) {
+      item.time = '19:00';
+      item.type = 2;
+      item.activity = '숙소에서 저녁 — 치킨 먹으며 바다 경치 감상 (일몰 19:23)';
+      item.mapUrl = undefined;
+      item.detail = '• 파라 모토부 치킨\n• 숙소 창가/테라스에서 일몰 바라보며\n• 맥주 한 캔이랑 최고의 조합';
+    }
+    if (item.activity.includes('비세자키 일몰 감상') && item.time === '18:30') {
+      item.activity = '파라 모토부 치킨 테이크아웃 출발';
+      item.type = 0;
       item.mapUrl = 'パーラーもとぶ田園 本部町';
-      item.detail = '• 모토부 명물 치킨 — 현지인 맛집\n• 테이크아웃 주문 후 숙소로\n• 스노클링 후 맥주 한 캔이랑 먹으면 최고';
+      item.detail = '• 숙소에서 차로 약 10~15분\n• 테이크아웃 주문 후 바로 복귀';
     }
   });
 }
