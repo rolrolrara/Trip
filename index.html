@@ -458,6 +458,24 @@ if (data[2] && (
 )) {
   data[2] = JSON.parse(JSON.stringify(DEFAULT_DATA[2]));
 }
+// 항목별 detail 마이그레이션: 빅익스프레스 메모 업데이트
+if (data[1]) {
+  data[1].items.forEach(item => {
+    if (item.activity.includes('빅익스프레스') && !item.detail.includes('다음날 저녁')) {
+      item.detail = '🌙 저녁\n• 초밥, 도시락 등\n\n🌅 아침\n• 주먹밥, 컵라면\n• 음료, 얼음, 물\n\n🔥 다음날 저녁\n• 구워먹을 고기';
+    }
+  });
+}
+// 2일차 저녁 마이그레이션: 파라 모토부 치킨
+if (data[2]) {
+  data[2].items.forEach(item => {
+    if (item.activity.includes('저녁 - 비세/모토부')) {
+      item.activity = '파라 모토부 치킨 테이크아웃 → 숙소에서 저녁';
+      item.mapUrl = 'パーラーもとぶ田園 本部町';
+      item.detail = '• 모토부 명물 치킨 — 현지인 맛집\n• 테이크아웃 주문 후 숙소로\n• 스노클링 후 맥주 한 캔이랑 먹으면 최고';
+    }
+  });
+}
 let activeDay = 1;
 
 function formatDate(startStr, offset) {
