@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>오키나와 4박 5일 여행 플래너</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", sans-serif;
+    background: linear-gradient(135deg, #00b4d8 0%, #0077b6 100%);
+    min-height: 100vh;
+    padding: 24px;
+    color: #1a1a1a;
+  }
+  .container { max-width: 1200px; margin: 0 auto; }
+  header {
+    background: white;
+    border-radius: 20px;
+    padding: 28px 32px;
+    margin-bottom: 24px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+  }
+  header h1 {
+    font-size: 28px;
+    color: #0077b6;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  header .subtitle {
+    color: #555;
+    margin-top: 6px;
+    font-size: 14px;
+  }
+  .date-range {
+    display: flex;
+    gap: 16px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+  .date-range label {
+    font-size: 13px;
+    color: #444;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .date-range input {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+  }
+  .tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+  .tab {
+    flex: 1;
+    min-width: 130px;
+    padding: 14px 16px;
+    background: rgba(255,255,255,0.7);
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    color: #0077b6;
+    transition: all 0.2s;
+    text-align: center;
+  }
+  .tab:hover { background: rgba(255,255,255,0.95); }
+  .tab.active {
+    background: white;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+    color: #023e8a;
+    transform: translateY(-2px);
+  }
+  .tab .day-num { display: block; font-size: 18px; margin-bottom: 2px; }
+  .tab .day-label { font-size: 11px; opacity: 0.7; font-weight: 500; }
+  .day-panel {
+    background: white;
+    border-radius: 20px;
+    padding: 28px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    display: none;
+  }
+  .day-panel.active { display: block; }
+  .day-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid #f0f0f0;
+  }
+  .day-header h2 {
+    color: #0077b6;
+    font-size: 22px;
+  }
+  .day-header .date {
+    color: #666;
+    font-size: 14px;
+  }
+  .add-btn {
+    background: #0077b6;
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    transition: background 0.2s;
+  }
+  .add-btn:hover { background: #023e8a; }
+  .schedule-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .schedule-row {
+    background: #f8fbfd;
+    border-left: 4px solid #00b4d8;
+    border-radius: 10px;
+    transition: all 0.2s;
+    overflow: hidden;
+  }
+  .schedule-row:hover { background: #eaf6fb; }
+  .schedule-item {
+    display: grid;
+    grid-template-columns: 120px 50px 1fr auto auto auto;
+    gap: 14px;
+    align-items: center;
+    padding: 14px 16px;
+  }
+  .schedule-item input.time {
+    background: transparent;
+    border: none;
+    font-size: 15px;
+    font-weight: 600;
+    color: #0077b6;
+    outline: none;
+    width: 100%;
+  }
+  .schedule-item select.type {
+    background: transparent;
+    border: none;
+    font-size: 18px;
+    outline: none;
+    cursor: pointer;
+    text-align: center;
+  }
+  .schedule-item input.activity {
+    background: transparent;
+    border: none;
+    font-size: 14px;
+    outline: none;
+    width: 100%;
+    padding: 4px 0;
+  }
+  .schedule-item input:focus, .schedule-item select:focus {
+    background: white;
+    border-radius: 6px;
+    padding: 4px 8px;
+  }
+  .schedule-item .icon-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    opacity: 0.5;
+    transition: all 0.2s;
+  }
+  .schedule-row:hover .icon-btn { opacity: 1; }
+  .schedule-item .map-btn { color: #0077b6; }
+  .schedule-item .map-btn:hover { background: #d8efff; }
+  .schedule-item .map-btn.active { opacity: 1; background: #ade8f4; }
+  .schedule-item .del-btn { color: #c0392b; }
+  .schedule-item .del-btn:hover { background: #fdecea; }
+  .schedule-item .detail-btn { color: #888; }
+  .schedule-item .detail-btn:hover { background: #f0f0f0; }
+  .schedule-item .detail-btn.active { opacity: 1; background: #fff3cd; color: #856404; }
+  .schedule-item .detail-btn.has-detail { opacity: 1; color: #e67e22; }
+  .detail-panel {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+  }
+  .detail-panel.open { max-height: 260px; }
+  .detail-panel textarea {
+    width: 100%;
+    min-height: 120px;
+    padding: 12px 16px;
+    border: none;
+    border-top: 1px solid #e0eef5;
+    background: #fffdf0;
+    font-size: 13px;
+    line-height: 1.7;
+    resize: vertical;
+    outline: none;
+    font-family: inherit;
+    color: #333;
+    display: block;
+  }
+  .detail-panel textarea:focus { background: #fffbe6; }
+  .map-panel {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    background: white;
+  }
+  .map-panel.open { max-height: 360px; }
+  .map-panel iframe {
+    width: 100%;
+    height: 320px;
+    border: none;
+    display: block;
+  }
+  .map-panel .map-link {
+    display: block;
+    padding: 8px 16px;
+    background: #f0f8fc;
+    font-size: 12px;
+    color: #0077b6;
+    text-decoration: none;
+    border-top: 1px solid #e0eef5;
+  }
+  .map-panel .map-link:hover { background: #e0f3fb; }
+  .empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: #999;
+    font-size: 14px;
+  }
+  .summary-bar {
+    margin-top: 24px;
+    padding: 16px 20px;
+    background: linear-gradient(90deg, #caf0f8, #ade8f4);
+    border-radius: 12px;
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .summary-bar .stat {
+    text-align: center;
+  }
+  .summary-bar .stat-num {
+    font-size: 22px;
+    font-weight: 700;
+    color: #023e8a;
+  }
+  .summary-bar .stat-label {
+    font-size: 12px;
+    color: #555;
+    margin-top: 2px;
+  }
+  .actions {
+    margin-top: 20px;
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+  }
+  .actions button {
+    padding: 10px 20px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .btn-save { background: #06a77d; color: white; }
+  .btn-export { background: white; color: #0077b6; border: 1px solid #0077b6; }
+
+  @media (max-width: 600px) {
+    body { padding: 10px; }
+    header { padding: 18px 16px; border-radius: 14px; }
+    header h1 { font-size: 19px; }
+    header .subtitle { font-size: 12px; }
+    .date-range { gap: 10px; }
+    .date-range input { font-size: 13px; padding: 6px 8px; }
+    .tab { min-width: 80px; padding: 10px 6px; font-size: 12px; border-radius: 10px; }
+    .tab .day-num { font-size: 15px; }
+    .tab .day-label { font-size: 9px; }
+    .day-panel { padding: 16px 12px; border-radius: 14px; }
+    .day-header h2 { font-size: 16px; }
+    .day-header .date { font-size: 12px; }
+    .add-btn { padding: 8px 12px; font-size: 12px; }
+    .schedule-item {
+      grid-template-columns: 66px 32px 1fr auto auto auto;
+      gap: 5px;
+      padding: 10px 10px;
+    }
+    .schedule-item input.time { font-size: 12px; }
+    .schedule-item select.type { font-size: 16px; }
+    .schedule-item input.activity { font-size: 12px; }
+    .schedule-item .icon-btn { font-size: 14px; padding: 5px 5px; }
+    .detail-panel textarea { font-size: 12px; min-height: 100px; }
+    .summary-bar { padding: 12px 14px; gap: 8px; }
+    .summary-bar .stat-num { font-size: 18px; }
+    .summary-bar .stat-label { font-size: 11px; }
+    .actions { flex-wrap: wrap; }
+    .actions button { flex: 1; min-width: 100px; font-size: 12px; padding: 9px 12px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>🌺 오키나와 4박 5일 여행 플래너</h1>
+    <div class="subtitle">일정을 자유롭게 추가하고 편집해 보세요</div>
+    <div class="date-range">
+      <label>출발일
+        <input type="date" id="startDate" value="2026-06-16">
+      </label>
+      <label>도착일
+        <input type="date" id="endDate" value="2026-05-19" readonly>
+      </label>
+    </div>
+  </header>
+
+  <div class="tabs" id="tabs"></div>
+
+  <div id="panels"></div>
+
+  <div class="summary-bar">
+    <div class="stat"><div class="stat-num" id="totalItems">0</div><div class="stat-label">총 일정</div></div>
+    <div class="stat"><div class="stat-num">4박 5일</div><div class="stat-label">여행 기간</div></div>
+    <div class="stat"><div class="stat-num" id="totalMeals">0</div><div class="stat-label">식사 일정</div></div>
+    <div class="stat"><div class="stat-num" id="totalSpots">0</div><div class="stat-label">관광지</div></div>
+  </div>
+
+  <div class="actions">
+    <button class="btn-export" onclick="resetData()">↺ 기본 일정으로 초기화</button>
+    <button class="btn-export" onclick="exportData()">📋 일정 복사</button>
+    <button class="btn-save" onclick="saveData()">💾 저장</button>
+  </div>
+</div>
+
+<script>
+const TYPES = [
+  { icon: '✈️', name: '이동' },
+  { icon: '🏨', name: '숙소' },
+  { icon: '🍽️', name: '식사' },
+  { icon: '🏖️', name: '관광' },
+  { icon: '🛍️', name: '쇼핑' },
+  { icon: '☕', name: '카페' },
+  { icon: '🎡', name: '액티비티' },
+];
+
+const DEFAULT_DATA = {
+  1: { label: '도착 & 북부 이동', items: [
+    { time: '09:45', type: 0, activity: '인천공항 출발 (나하행)', detail: '' },
+    { time: '12:05', type: 0, activity: '나하공항 도착 → 입국 수속 & 수하물 수취', detail: '• Visit Japan Web 사전 등록 시 입국 빠름\n• 수하물 수취 후 1층 도착 로비로\n• 입국 수속~출구까지 약 30~40분 예상' },
+    { time: '12:40', type: 0, activity: '공항 출구 통과', detail: '' },
+    { time: '13:00', type: 0, activity: '릴랙스 렌트카 픽업 (13:30 이내) — Relax Car Rental, 나하시 (26.2205, 127.6741)', detail: '• 공항 1층 도착 로비에서 렌트카 셔틀 탑승\n• 카시트 예약 여부 사전 확인\n• 출발 전 차량 외관 사진 찍어두기' },
+    { time: '13:30', type: 2, activity: '타카라 쇼쿠도 (宝食堂) 점심 — 오키나와 향토 음식', detail: '• 오키나와 향토 요리 노포\n• 소키소바, 고야 챰프루 추천\n• 현금 결제 권장\n• 웨이팅 있을 수 있음' },
+    { time: '14:30', type: 0, activity: '북부 모토부로 이동 (약 1h 30min)', detail: '• 나하 → 나하IC → 나고IC → 모토부 방면\n• 고속도로 이용 시 약 1시간 30분' },
+    { time: '16:00', type: 2, activity: '우에마 선어점 (上間鮮魚店) — 신선한 회 구입 (시간 미정)', detail: '• 현지인이 즐겨 찾는 신선 어패류 가게\n• 저녁 회 분량 구입\n• 영업시간 사전 확인 권장\n• 현금 지참 권장' },
+    { time: '16:30', type: 4, activity: '빅익스프레스 (Big Express) 나고점 — 저녁거리 & 간식 장보기', detail: '• 오키나와 대형 슈퍼마켓\n• 오리온 맥주, 두부요거트, 아와모리\n• 한정 스낵: 보노보노, 자가리코 오키나와\n• 음료·얼음도 여기서' },
+    { time: '17:30', type: 1, activity: 'Niruyakanaya BISE 체크인 (2박, 예약번호: IY1513059608)', detail: '• 예약번호: IY1513059608\n• 비세 마을 후쿠기 가로수길 인근\n• 체크인 16:00~ (사전 확인)\n• 조식 포함 여부 확인' },
+    { time: '18:00', type: 3, activity: '비세자키 일몰 산책 — 숙소 도보 15분, 서쪽 바다 조망 (일몰 19:22)', detail: '• 숙소에서 비세 후쿠기 가로수길 따라 도보 약 15분\n• 비세 반도 끝 곶(岬) — 서쪽 바다가 탁 트임\n• 주변에 아무것도 없어 조용하고 노을 감상 최적\n• 19:00~19:30 황금빛 노을 타이밍\n• 돌아올 때도 가로수길 야경 예쁨' },
+    { time: '19:30', type: 2, activity: '저녁 - 숙소에서 (장 봐온 음식)', detail: '• 우에마 선어점 회\n• 빅익스프레스에서 산 반찬·음료' },
+  ]},
+  2: { label: '츄라우미 수족관 + 스노클링', items: [
+    { time: '08:00', type: 2, activity: '조식', detail: '• 숙소 조식 또는 근처 편의점' },
+    { time: '08:30', type: 0, activity: '출발', detail: '' },
+    { time: '08:45', type: 3, activity: '츄라우미 수족관 — 오션 엑스포 공원 (숙소 차 10분)', detail: '• 개관 8:30, 일찍 입장하면 한산함\n• 입장료: 어른 2,180엔, 초등생 710엔, 6세 이하 무료\n• 세계 최대급 수조 「흑조의 바다」— 고래상어·만타레이\n• 오션 엑스포 공원 내 돌고래 쇼 무료 (시간 확인)\n• 소요 약 2~2.5시간' },
+    { time: '11:15', type: 0, activity: '숙소 복귀', detail: '' },
+    { time: '12:00', type: 2, activity: '후쿠키야 (フクキヤ) 점심 — BISE 숙소 근처', detail: '• 비세 마을 내 캐주얼 일식 레스토랑\n• 숙소에서 가까워 스노클링 전 여유롭게 식사 가능\n• 지도: https://maps.app.goo.gl/J2CY2FFeZsXKtudF9' },
+    { time: '14:00', type: 6, activity: 'BISE 비치 스노클링 — 숙소 바로 앞', detail: '• 숙소에서 도보 5분\n• 수심 얕고 잔잔해 아이와 함께하기 좋음\n• 열대어·작은 산호 관찰 가능\n• 마스크·스노클·오리발 지참\n• 구명조끼 착용 권장' },
+    { time: '15:30', type: 6, activity: '비세자키 스노클링 — 산호초·바다거북 (간조 14:59 최적)', detail: '• 숙소에서 도보 15분 또는 차 5분\n• 비세 반도 끝 산호초 군락 — 바다거북 자주 출몰\n• 간조 직후라 수심 얕아 스노클링 최적\n• 조개·산호 밟지 않도록 주의\n• 아이 구명조끼 필수' },
+    { time: '17:30', type: 1, activity: '숙소 복귀 & 샤워', detail: '' },
+    { time: '18:30', type: 3, activity: '비세자키 일몰 감상', detail: '• 일몰 19:23\n• 서쪽 바다 조망 포인트\n• 스노클링 끝나고 다시 비세자키로' },
+    { time: '19:30', type: 2, activity: '저녁 - 비세/모토부 근처', detail: '• 모토부 시내 식당\n• 오키나와 소바·해산물 추천' },
+  ]},
+  3: { label: '나키진 → 고우리 → 세소코 스노클링 → 차탄', items: [
+    { time: '08:00', type: 2, activity: 'Niruyakanaya BISE 조식 & 체크아웃', detail: '• 체크아웃 전 짐 정리\n• 귀중품·충전기 확인' },
+    { time: '08:30', type: 3, activity: '비세 후쿠기 가로수길 & 비세자키 아침 산책', mapUrl: '備瀬のフクギ並木 沖縄', detail: '• 수백 년 된 후쿠기 나무 가로수길\n• 비세자키 곶까지 걸어서 왕복 약 30분\n• 아침 바다 공기 마시며 가볍게' },
+    { time: '09:15', type: 0, activity: '출발', detail: '' },
+    { time: '09:30', type: 3, activity: '나키진 성터 (今帰仁城跡) — UNESCO 세계유산, BISE에서 차 10분', mapUrl: '今帰仁城跡', detail: '• 입장료: 어른 400엔, 중학생 이하 200엔\n• 류큐왕국 북산성, 유네스코 세계유산\n• 성벽에서 북쪽 바다 조망 가능\n• 관람 소요 약 40~60분' },
+    { time: '10:20', type: 0, activity: '출발', detail: '' },
+    { time: '10:35', type: 3, activity: '고우리 대교 & 티누하마 비치 (잠깐 들르기)', mapUrl: '古宇利大橋 沖縄', detail: '• 전장 1960m 드라이브 코스\n• 하트로(하트 바위) 포토 스팟\n• 티누하마 비치 에메랄드빛 물색\n• 20~30분이면 충분' },
+    { time: '11:10', type: 0, activity: '세소코 섬으로 이동 (차 20분)', detail: '' },
+    { time: '11:30', type: 2, activity: '점심 — 세소코 섬 근처', mapUrl: '瀬底島 レストラン', detail: '• 세소코 섬 주변 식당\n• 스노클링 전 가볍게 식사' },
+    { time: '13:30', type: 6, activity: '세소코 비치 스노클링 (간조 15:46, 최적 13:30~16:00)', mapUrl: '瀬底ビーチ 本部町', detail: '• 세소코 섬 (瀬底島) — 모토부에서 다리로 연결\n• 투명도 높은 에메랄드빛 바다\n• 산호초·열대어 풍부\n• 간조 2시간 전부터가 시야 가장 맑음\n• 아이 구명조끼 필수\n• 비치 입장 무료, 주차장 있음' },
+    { time: '16:00', type: 0, activity: '차탄으로 이동 (약 1시간 30분)', detail: '' },
+    { time: '17:30', type: 1, activity: '베셀 호텔 캄파나 오키나와 체크인 (2박, 예약번호: 1400823286556555)', detail: '• 예약번호: 1400823286556555\n• 2박\n• 차탄 미하마 아메리칸 빌리지 인근\n• 수영장·사우나 완비' },
+    { time: '19:00', type: 3, activity: '미국촌 (아메리칸 빌리지) 야경 산책', detail: '• 야경이 훨씬 예쁨 — 대관람차 조명\n• 아이스크림·타코 등 먹거리 많음\n• 저녁 식사 겸 산책' },
+    { time: '21:00', type: 2, activity: '저녁 - 미하마 근처', detail: '' },
+    { time: '22:00', type: 6, activity: '호텔 사우나', detail: '' },
+  ]},
+  4: { label: '만자모 → 부세나 + 물놀이', items: [
+    { time: '09:00', type: 2, activity: '여유로운 조식', detail: '' },
+    { time: '10:00', type: 0, activity: '출발 → 온나손 (차 40분)', detail: '' },
+    { time: '10:40', type: 3, activity: '만자모 (万座毛) 절경 감상', mapUrl: '万座毛 恩納村', detail: '• 코끼리 코 모양 바위 절경\n• 입장료 있음 (정비 후 유료화)\n• 전망대에서 에메랄드빛 바다 감상\n• 20~30분이면 충분' },
+    { time: '11:15', type: 6, activity: '부세나 해중공원 (글래스보트 + 해중전망탑) — 만자모에서 차 10분', mapUrl: '部瀬名海中公園 恩納村', detail: '• 글래스보트: 유리 바닥 보트로 해저 관찰, 약 20분\n• 해중전망탑: 바닷속 360° 전망\n• 세트권 구매 추천\n• 아이들이 매우 좋아하는 코스' },
+    { time: '13:30', type: 2, activity: '점심 - 부세나 근처', detail: '' },
+    { time: '15:00', type: 0, activity: '호텔 복귀 (차 40분)', detail: '' },
+    { time: '15:30', type: 6, activity: '호텔 풀에서 물놀이 & 휴식', detail: '• 베셀 호텔 수영장\n• 오후 여유롭게 물놀이 & 휴식' },
+    { time: '17:30', type: 6, activity: '선시 비치 일몰 물놀이', detail: '• 차탄 북쪽 해변\n• 일몰 약 19:20\n• 물 맑고 파도 잔잔한 편' },
+    { time: '19:30', type: 2, activity: '저녁 - 미하마 패밀리 레스토랑', detail: '' },
+    { time: '21:30', type: 6, activity: '호텔 사우나', detail: '' },
+  ]},
+  5: { label: '귀국', items: [
+    { time: '08:00', type: 2, activity: '조식', detail: '' },
+    { time: '09:00', type: 6, activity: '선시 비치 또는 호텔 풀에서 마지막 물놀이', detail: '• 마지막 물놀이\n• 체크아웃 전 짐 먼저 정리해두기' },
+    { time: '10:30', type: 1, activity: '베셀 호텔 캄파나 오키나와 체크아웃', detail: '• 귀중품·충전기 빠짐없이 확인\n• 짐은 프런트에 맡겨도 됨' },
+    { time: '11:00', type: 0, activity: '공항 방면 이동', detail: '' },
+    { time: '11:30', type: 2, activity: '점심 - 공항 근처', detail: '• 나하 공항 근처 식당\n• 시간 여유 있으면 국제거리 근처도 가능' },
+    { time: '12:30', type: 0, activity: '릴랙스 렌트카 반납', detail: '• 반납 전 주유 확인 (만탱크 조건 여부)\n• 차량 내 물건 빠짐없이 확인\n• 반납 후 공항까지 셔틀 운행' },
+    { time: '13:00', type: 0, activity: '공항 체크인', detail: '• 나하공항 국제선 터미널\n• 출발 2시간 전 체크인 권장\n• 면세점 쇼핑 시간 확보' },
+    { time: '15:00', type: 0, activity: '나하공항 출발 (인천행)', detail: '' },
+    { time: '17:35', type: 0, activity: '인천공항 도착', detail: '' },
+  ]},
+};
+
+let data = JSON.parse(localStorage.getItem('okinawaTrip')) || DEFAULT_DATA;
+// detail 필드 없는 구버전 데이터 마이그레이션
+for (let d = 1; d <= 5; d++) {
+  if (data[d]) {
+    data[d].items.forEach((item, idx) => {
+      if (item.detail === undefined) {
+        item.detail = (DEFAULT_DATA[d] && DEFAULT_DATA[d].items[idx] && DEFAULT_DATA[d].items[idx].detail) || '';
+      }
+    });
+  }
+}
+// 장소 변경 마이그레이션: 에메랄드 비치 → 비세자키 (Day 1)
+if (data[1]) {
+  data[1].items.forEach(item => {
+    if (item.activity.includes('에메랄드 비치 일몰')) {
+      item.activity = '비세자키 일몰 산책 — 숙소 도보 15분, 서쪽 바다 조망 (일몰 19:22)';
+      item.detail = '• 숙소에서 비세 후쿠기 가로수길 따라 도보 약 15분\n• 비세 반도 끝 곶(岬) — 서쪽 바다가 탁 트임\n• 주변에 아무것도 없어 조용하고 노을 감상 최적\n• 19:00~19:30 황금빛 노을 타이밍\n• 돌아올 때도 가로수길 야경 예쁨';
+    }
+  });
+}
+// Day 3 일정 변경 마이그레이션: → 세소코 스노클링 경유 차탄
+if (data[3] && !data[3].items.some(item => item.activity.includes('세소코'))) {
+  data[3] = JSON.parse(JSON.stringify(DEFAULT_DATA[3]));
+}
+// Day 4 일정 변경 마이그레이션: 만자모 추가
+if (data[4] && !data[4].items.some(item => item.activity.includes('만자모'))) {
+  data[4] = JSON.parse(JSON.stringify(DEFAULT_DATA[4]));
+}
+// Day 2 일정 변경 마이그레이션: 에메랄드 비치 물놀이 → 츄라우미 수족관 + 스노클링 + 후쿠키야
+if (data[2] && (
+  data[2].items.some(item => item.activity.includes('에메랄드 비치 물놀이')) ||
+  data[2].items.some(item => item.activity.includes('모토부 참치 맛집'))
+)) {
+  data[2] = JSON.parse(JSON.stringify(DEFAULT_DATA[2]));
+}
+let activeDay = 1;
+
+function formatDate(startStr, offset) {
+  const d = new Date(startStr);
+  d.setDate(d.getDate() + offset);
+  return `${d.getMonth()+1}월 ${d.getDate()}일 (${'일월화수목금토'[d.getDay()]})`;
+}
+
+function updateEndDate() {
+  const start = document.getElementById('startDate').value;
+  if (!start) return;
+  const d = new Date(start);
+  d.setDate(d.getDate() + 4);
+  document.getElementById('endDate').value = d.toISOString().split('T')[0];
+  renderTabs();
+  renderPanels();
+}
+
+function renderTabs() {
+  const tabs = document.getElementById('tabs');
+  const start = document.getElementById('startDate').value;
+  tabs.innerHTML = '';
+  for (let i = 1; i <= 5; i++) {
+    const btn = document.createElement('button');
+    btn.className = 'tab' + (i === activeDay ? ' active' : '');
+    btn.innerHTML = `<span class="day-num">DAY ${i}</span><span class="day-label">${data[i].label} · ${formatDate(start, i-1)}</span>`;
+    btn.onclick = () => { activeDay = i; renderTabs(); renderPanels(); };
+    tabs.appendChild(btn);
+  }
+}
+
+function renderPanels() {
+  const panels = document.getElementById('panels');
+  panels.innerHTML = '';
+  const start = document.getElementById('startDate').value;
+
+  for (let i = 1; i <= 5; i++) {
+    const panel = document.createElement('div');
+    panel.className = 'day-panel' + (i === activeDay ? ' active' : '');
+
+    const items = data[i].items;
+    const itemsHtml = items.length === 0
+      ? `<div class="empty">아직 일정이 없습니다. '+ 일정 추가' 버튼을 눌러보세요.</div>`
+      : items.map((item, idx) => {
+          const mappable = [1, 2, 3, 4, 5, 6].includes(item.type);
+          const query = item.mapUrl
+            ? encodeURIComponent(item.mapUrl)
+            : encodeURIComponent(extractPlace(item.activity) + ' 오키나와');
+          return `
+        <div class="schedule-row">
+          <div class="schedule-item">
+            <input type="time" class="time" value="${item.time}" onchange="updateItem(${i}, ${idx}, 'time', this.value)">
+            <select class="type" onchange="updateItem(${i}, ${idx}, 'type', this.value)">
+              ${TYPES.map((t, ti) => `<option value="${ti}" ${ti==item.type?'selected':''}>${t.icon}</option>`).join('')}
+            </select>
+            <input type="text" class="activity" value="${item.activity.replace(/"/g,'&quot;')}" onchange="updateItem(${i}, ${idx}, 'activity', this.value)" placeholder="활동을 입력하세요">
+            ${mappable ? `<button class="icon-btn map-btn" onclick="toggleMap(this, '${query}')" title="지도 보기">📍</button>` : `<span></span>`}
+            <button class="icon-btn detail-btn${item.detail ? ' has-detail' : ''}" onclick="toggleDetail(this)" title="상세 내용">📝</button>
+            <button class="icon-btn del-btn" onclick="deleteItem(${i}, ${idx})" title="삭제">✕</button>
+          </div>
+          <div class="detail-panel">${item.detail ? `<textarea oninput="updateItem(${i}, ${idx}, 'detail', this.value)" placeholder="상세 내용을 입력하세요...">${item.detail.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>` : `<textarea oninput="updateItem(${i}, ${idx}, 'detail', this.value)" placeholder="상세 내용을 입력하세요..."></textarea>`}</div>
+          <div class="map-panel"></div>
+        </div>
+      `;}).join('');
+
+    panel.innerHTML = `
+      <div class="day-header">
+        <div>
+          <h2>DAY ${i} · ${data[i].label}</h2>
+          <div class="date">${formatDate(start, i-1)}</div>
+        </div>
+        <button class="add-btn" onclick="addItem(${i})">+ 일정 추가</button>
+      </div>
+      <div class="schedule-list">${itemsHtml}</div>
+    `;
+    panels.appendChild(panel);
+  }
+  updateSummary();
+}
+
+function updateItem(day, idx, field, value) {
+  data[day].items[idx][field] = field === 'type' ? parseInt(value) : value;
+}
+
+function extractPlace(activity) {
+  // 활동 텍스트에서 장소명만 추출 (구분자 - 앞쪽, 괄호 안 정보 제거)
+  let s = activity.split(/[-–]/)[0].trim();
+  s = s.replace(/\([^)]*\)/g, '').trim();
+  s = s.replace(/(체크인|체크아웃|조식|점심|저녁|관람|이동|픽업|반납|산책|쇼핑|출발|도착|에서|일몰|일출|감상|스노클링|물놀이|아침|야경|잠깐|들르기)/g, '').trim();
+  return s || activity;
+}
+
+function toggleMap(btn, query) {
+  const row = btn.closest('.schedule-row');
+  const panel = row.querySelector('.map-panel');
+  const isOpen = panel.classList.contains('open');
+  // 같은 패널에 있는 다른 지도들 닫기
+  document.querySelectorAll('.map-panel.open').forEach(p => {
+    p.classList.remove('open');
+    p.innerHTML = '';
+  });
+  document.querySelectorAll('.map-btn.active').forEach(b => b.classList.remove('active'));
+  if (!isOpen) {
+    panel.innerHTML = `
+      <iframe src="https://www.google.com/maps?q=${query}&output=embed" loading="lazy"></iframe>
+      <a class="map-link" href="https://www.google.com/maps/search/?api=1&query=${query}" target="_blank">↗ 구글 지도에서 열기</a>
+    `;
+    panel.classList.add('open');
+    btn.classList.add('active');
+  }
+}
+
+function toggleDetail(btn) {
+  const row = btn.closest('.schedule-row');
+  const panel = row.querySelector('.detail-panel');
+  const isOpen = panel.classList.contains('open');
+  document.querySelectorAll('.detail-panel.open').forEach(p => p.classList.remove('open'));
+  document.querySelectorAll('.detail-btn.active').forEach(b => b.classList.remove('active'));
+  if (!isOpen) {
+    panel.classList.add('open');
+    btn.classList.add('active');
+    panel.querySelector('textarea').focus();
+  }
+}
+
+function addItem(day) {
+  data[day].items.push({ time: '12:00', type: 3, activity: '', detail: '' });
+  // sort by time
+  data[day].items.sort((a, b) => a.time.localeCompare(b.time));
+  renderPanels();
+}
+
+function deleteItem(day, idx) {
+  if (confirm('이 일정을 삭제할까요?')) {
+    data[day].items.splice(idx, 1);
+    renderPanels();
+  }
+}
+
+function updateSummary() {
+  let total = 0, meals = 0, spots = 0;
+  for (let i = 1; i <= 5; i++) {
+    total += data[i].items.length;
+    meals += data[i].items.filter(x => x.type === 2).length;
+    spots += data[i].items.filter(x => x.type === 3).length;
+  }
+  document.getElementById('totalItems').textContent = total;
+  document.getElementById('totalMeals').textContent = meals;
+  document.getElementById('totalSpots').textContent = spots;
+}
+
+function saveData() {
+  localStorage.setItem('okinawaTrip', JSON.stringify(data));
+  alert('일정이 저장되었습니다! 🌺');
+}
+
+function resetData() {
+  if (confirm('현재 일정을 모두 지우고 기본 일정으로 되돌릴까요?')) {
+    localStorage.removeItem('okinawaTrip');
+    data = JSON.parse(JSON.stringify(DEFAULT_DATA));
+    renderTabs();
+    renderPanels();
+  }
+}
+
+function exportData() {
+  const start = document.getElementById('startDate').value;
+  let text = `🌺 오키나와 4박 5일 여행 일정\n${'='.repeat(40)}\n\n`;
+  for (let i = 1; i <= 5; i++) {
+    text += `📅 DAY ${i} · ${data[i].label} (${formatDate(start, i-1)})\n`;
+    text += '-'.repeat(40) + '\n';
+    data[i].items.forEach(item => {
+      text += `  ${item.time}  ${TYPES[item.type].icon} ${item.activity}\n`;
+    });
+    text += '\n';
+  }
+  navigator.clipboard.writeText(text).then(() => {
+    alert('일정이 클립보드에 복사되었습니다! 📋');
+  });
+}
+
+document.getElementById('startDate').addEventListener('change', updateEndDate);
+updateEndDate();
+</script>
+</body>
+</html>
